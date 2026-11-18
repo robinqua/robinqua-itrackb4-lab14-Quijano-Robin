@@ -29,6 +29,28 @@
                     </a>
                 </li>
             </ul>
+            <ul class="navbar-nav ms-auto">
+                <?php if(auth()->guard()->guest()): ?>
+                    <li class="nav-item">
+                        <a href="<?php echo e(route('login')); ?>" class="nav-link">Log in</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?php echo e(route('register')); ?>" class="nav-link">Register</a>
+                    </li>
+                <?php endif; ?>
+
+                <?php if(auth()->guard()->check()): ?>
+                    <li class="nav-item">
+                        <span class="navbar-text me-3"><?php echo e(Auth::user()->name); ?></span>
+                    </li>
+                    <li class="nav-item">
+                        <form method="POST" action="<?php echo e(route('logout')); ?>">
+                            <?php echo csrf_field(); ?>
+                            <button type="submit" class="nav-link">Log out</button>
+                        </form>
+                    </li>
+                <?php endif; ?>
+            </ul>
         </div>
     </div>
 </nav>

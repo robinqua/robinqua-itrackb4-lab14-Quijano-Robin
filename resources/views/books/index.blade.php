@@ -8,7 +8,9 @@
             <h1 class="mb-1">My Book List</h1>
             <p class="mb-0"><strong>Books in collection:</strong> <span data-testid="book-count">{{ $bookCount }}</span></p>
         </div>
-        <a href="{{ route('books.create') }}" class="btn btn-success">Add a Book</a>
+        @auth
+            <a href="{{ route('books.create') }}" class="btn btn-primary">+ Add Book</a>
+        @endauth
     </div>
 
     <form method="GET" action="{{ route('books.index') }}" class="row g-2 align-items-end mb-4">
@@ -81,7 +83,9 @@
                     <th scope="col">Author</th>
                     <th scope="col">Genre</th>
                     <th scope="col">Pages</th>
-                    <th scope="col">Actions</th>
+                    @auth
+                        <th scope="col">Actions</th>
+                    @endauth
                 </tr>
             </thead>
             <tbody>
@@ -100,21 +104,23 @@
                                 {{ $book->pages }}
                             @endif
                         </td>
-                        <td>
-                            <div class="d-flex flex-wrap gap-2">
-                                <a href="{{ route('books.edit', $book) }}" class="btn btn-sm btn-warning">Edit</a>
-                                <form action="{{ route('books.destroy', $book) }}" method="POST"
-                                      onsubmit="return confirm('Delete this record?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                </form>
-                            </div>
-                        </td>
+                        @auth
+                            <td>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a href="{{ route('books.edit', $book) }}" class="btn btn-sm btn-warning">Edit</a>
+                                    <form action="{{ route('books.destroy', $book) }}" method="POST"
+                                          onsubmit="return confirm('Delete this record?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        @endauth
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8">No books match this search and these filters.</td>
+                        <td colspan="{{ Auth::check() ? 8 : 7 }}">No books match this search and these filters.</td>
                     </tr>
                 @endforelse
             </tbody>

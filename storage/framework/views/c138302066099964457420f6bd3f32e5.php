@@ -8,7 +8,9 @@
             <h1 class="mb-1">My Book List</h1>
             <p class="mb-0"><strong>Books in collection:</strong> <span data-testid="book-count"><?php echo e($bookCount); ?></span></p>
         </div>
-        <a href="<?php echo e(route('books.create')); ?>" class="btn btn-success">Add a Book</a>
+        <?php if(auth()->guard()->check()): ?>
+            <a href="<?php echo e(route('books.create')); ?>" class="btn btn-primary">+ Add Book</a>
+        <?php endif; ?>
     </div>
 
     <form method="GET" action="<?php echo e(route('books.index')); ?>" class="row g-2 align-items-end mb-4">
@@ -83,7 +85,9 @@
                     <th scope="col">Author</th>
                     <th scope="col">Genre</th>
                     <th scope="col">Pages</th>
-                    <th scope="col">Actions</th>
+                    <?php if(auth()->guard()->check()): ?>
+                        <th scope="col">Actions</th>
+                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -103,21 +107,23 @@
 
                             <?php endif; ?>
                         </td>
-                        <td>
-                            <div class="d-flex flex-wrap gap-2">
-                                <a href="<?php echo e(route('books.edit', $book)); ?>" class="btn btn-sm btn-warning">Edit</a>
-                                <form action="<?php echo e(route('books.destroy', $book)); ?>" method="POST"
-                                      onsubmit="return confirm('Delete this record?')">
-                                    <?php echo csrf_field(); ?>
-                                    <?php echo method_field('DELETE'); ?>
-                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                </form>
-                            </div>
-                        </td>
+                        <?php if(auth()->guard()->check()): ?>
+                            <td>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a href="<?php echo e(route('books.edit', $book)); ?>" class="btn btn-sm btn-warning">Edit</a>
+                                    <form action="<?php echo e(route('books.destroy', $book)); ?>" method="POST"
+                                          onsubmit="return confirm('Delete this record?')">
+                                        <?php echo csrf_field(); ?>
+                                        <?php echo method_field('DELETE'); ?>
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        <?php endif; ?>
                     </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr>
-                        <td colspan="8">No books match this search and these filters.</td>
+                        <td colspan="<?php echo e(Auth::check() ? 8 : 7); ?>">No books match this search and these filters.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

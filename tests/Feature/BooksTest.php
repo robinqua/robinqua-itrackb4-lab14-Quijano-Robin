@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Book;
+use App\Models\User;
 use Database\Seeders\BookSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -137,5 +138,77 @@ class BooksTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseHas('books', ['id' => $book->id]);
+    }
+
+    public function test_guests_are_redirected_from_book_write_and_edit_routes(): void
+    {
+        $book = Book::query()->firstOrFail();
+
+        $this->get(route('books.create'))
+            ->assertRedirect(route('login'));
+
+        $this->post(route('books.store'), [])
+            ->assertRedirect(route('login'));
+
+        $this->get(route('books.edit', $book))
+            ->assertRedirect(route('login'));
+
+        $this->put(route('books.update', $book), [])
+            ->assertRedirect(route('login'));
+
+        $this->delete(route('books.destroy', $book))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_guests_can_still_browse_book_index_and_details(): void
+    {
+        $book = Book::query()->firstOrFail();
+
+        $this->get(route('books.index'))
+            ->assertOk()
+            ->assertDontSee(route('books.create'))
+            ->assertDontSee(route('books.edit', $book))
+            ->assertDontSee('action="'.route('books.destroy', $book).'"', false)
+            ->assertDontSee('>+ Add Book</a>', false)
+            ->assertDontSee('>Actions</th>', false)
+            ->assertDontSee('>Edit</a>', false)
+            ->assertDontSee('>Delete</button>', false);
+
+        $this->get(route('books.show', $book))->assertOk();
+    }
+
+    public function test_authenticated_users_see_book_mutation_controls(): void
+    {
+        $book = Book::query()->firstOrFail();
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('books.index'))
+            ->assertOk()
+            ->assertSee(route('books.create'))
+            ->assertSee(route('books.edit', $book))
+            ->assertSee(route('books.destroy', $book))
+            ->assertSee('>+ Add Book</a>', false)
+            ->assertSee('>Actions</th>', false)
+            ->assertSee('>Edit</a>', false)
+            ->assertSee('>Delete</button>', false);
+    }
+
+    public function test_login_after_a_guest_requests_create_redirects_to_create(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'reader@example.com',
+            'password' => 'correct-password',
+        ]);
+
+        $this->get(route('books.create'))
+            ->assertRedirect(route('login'));
+
+        $this->post(route('login.store'), [
+            'email' => 'reader@example.com',
+            'password' => 'correct-password',
+        ])
+            ->assertRedirect(route('books.create'));
+
+        $this->assertAuthenticatedAs($user);
     }
 }

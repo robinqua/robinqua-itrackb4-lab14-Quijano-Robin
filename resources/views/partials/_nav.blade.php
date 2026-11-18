@@ -29,6 +29,28 @@
                     </a>
                 </li>
             </ul>
+            <ul class="navbar-nav ms-auto">
+                @guest
+                    <li class="nav-item">
+                        <a href="{{ route('login') }}" class="nav-link">Log in</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('register') }}" class="nav-link">Register</a>
+                    </li>
+                @endguest
+
+                @auth
+                    <li class="nav-item">
+                        <span class="navbar-text me-3">{{ Auth::user()->name }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="nav-link">Log out</button>
+                        </form>
+                    </li>
+                @endauth
+            </ul>
         </div>
     </div>
 </nav>
