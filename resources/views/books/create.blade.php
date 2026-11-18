@@ -9,12 +9,6 @@
         @csrf
 
         <div class="mb-3">
-            <label for="id" class="form-label">ID</label>
-            <input type="number" id="id" name="id" value="{{ old('id', $nextId) }}" class="form-control" readonly>
-            @error('id') <div class="text-danger">{{ $message }}</div> @enderror
-        </div>
-
-        <div class="mb-3">
             <label for="isbn" class="form-label">ISBN</label>
             <input type="text" id="isbn" name="isbn" value="{{ old('isbn') }}" class="form-control">
             @error('isbn') <div class="text-danger">{{ $message }}</div> @enderror
@@ -24,6 +18,12 @@
             <label for="title" class="form-label">Title</label>
             <input type="text" id="title" name="title" value="{{ old('title') }}" class="form-control">
             @error('title') <div class="text-danger">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-3">
+            <label for="genre" class="form-label">Genre</label>
+            <input type="text" id="genre" name="genre" value="{{ old('genre') }}" class="form-control">
+            @error('genre') <div class="text-danger">{{ $message }}</div> @enderror
         </div>
 
         <div class="mb-3">

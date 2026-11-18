@@ -8,6 +8,7 @@
         <li class="list-group-item"><strong>ID:</strong> <?php echo e($book['id']); ?></li>
         <li class="list-group-item"><strong>ISBN:</strong> <?php echo e($book['isbn']); ?></li>
         <li class="list-group-item"><strong>Author:</strong> <?php echo e($book['author']); ?></li>
+        <li class="list-group-item"><strong>Genre:</strong> <?php echo e($book['genre']); ?></li>
         <li class="list-group-item"><strong>Pages:</strong> <?php echo e($book['pages']); ?></li>
     </ul>
 

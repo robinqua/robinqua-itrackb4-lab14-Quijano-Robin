@@ -8,6 +8,7 @@
         <li class="list-group-item"><strong>ID:</strong> {{ $book['id'] }}</li>
         <li class="list-group-item"><strong>ISBN:</strong> {{ $book['isbn'] }}</li>
         <li class="list-group-item"><strong>Author:</strong> {{ $book['author'] }}</li>
+        <li class="list-group-item"><strong>Genre:</strong> {{ $book['genre'] }}</li>
         <li class="list-group-item"><strong>Pages:</strong> {{ $book['pages'] }}</li>
     </ul>
 

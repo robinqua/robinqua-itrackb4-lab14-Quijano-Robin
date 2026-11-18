@@ -8,11 +8,8 @@
 </head>
 <body>
 
-    <header class="bg-dark text-white p-3 mb-4">
-        <div class="container">
-            <h1>My Awesome Site</h1>
-            @include('partials._nav')
-        </div>
+    <header class="mb-4">
+        @include('partials._nav')
     </header>
 
     <main class="container">
@@ -29,5 +26,6 @@
         <p>Robin Quijano</p>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

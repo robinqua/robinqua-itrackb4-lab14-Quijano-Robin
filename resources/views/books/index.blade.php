@@ -3,92 +3,123 @@
 @section('title', 'My Book List')
 
 @section('content')
-    <h1>My Book List</h1>
-    @if (session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-    <a href="{{ route('books.create') }}" class="btn btn-success mb-3">Add a Book</a>
-
-    <section class="mb-4">
-        <h2 class="h5">Filter by author</h2>
-        <div class="d-flex flex-wrap gap-2 mb-3">
-            @foreach ($authorOptions as $authorOption)
-                <a href="{{ route('books.index', array_filter(['author' => $authorOption, 'pages' => $pages])) }}"
-                   class="btn btn-sm {{ $author === $authorOption ? 'btn-primary' : 'btn-outline-primary' }}">
-                    {{ $authorOption }}
-                </a>
-            @endforeach
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="mb-1">My Book List</h1>
+            <p class="mb-0"><strong>Books in collection:</strong> <span data-testid="book-count">{{ $bookCount }}</span></p>
         </div>
+        <a href="{{ route('books.create') }}" class="btn btn-success">Add a Book</a>
+    </div>
 
-        <h2 class="h5">Filter by page count</h2>
-        <div class="d-flex flex-wrap gap-2">
-            @foreach ($pageOptions as $pageOption)
-                <a href="{{ route('books.index', array_filter(['author' => $author, 'pages' => $pageOption])) }}"
-                   class="btn btn-sm {{ (string) $pages === (string) $pageOption ? 'btn-primary' : 'btn-outline-primary' }}">
-                    {{ $pageOption }} pages
-                </a>
-            @endforeach
+    <form method="GET" action="{{ route('books.index') }}" class="row g-2 align-items-end mb-4">
+        <div class="col-md-4">
+            <label for="search" class="form-label">Search books</label>
+            <input id="search" name="search" type="search" value="{{ $search }}" class="form-control"
+                   placeholder="Title, author, or ISBN">
         </div>
+        <div class="col-md-2">
+            <label for="author" class="form-label">Author</label>
+            <select id="author" name="author" class="form-select">
+                <option value="">All authors</option>
+                @foreach ($authorOptions as $authorOption)
+                    <option value="{{ $authorOption }}" @selected((string) $author === (string) $authorOption)>
+                        {{ $authorOption }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="pages" class="form-label">Pages</label>
+            <select id="pages" name="pages" class="form-select">
+                <option value="">Any length</option>
+                @foreach ($pageOptions as $pageOption)
+                    <option value="{{ $pageOption }}" @selected((string) $pages === (string) $pageOption)>
+                        {{ $pageOption }} pages
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="genre" class="form-label">Genre</label>
+            <select id="genre" name="genre" class="form-select">
+                <option value="">All genres</option>
+                @foreach ($genreOptions as $genreOption)
+                    <option value="{{ $genreOption }}" @selected($genre === $genreOption)>{{ $genreOption }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="sort" class="form-label">Sort by</label>
+            <select id="sort" name="sort" class="form-select">
+                @foreach ($sortOptions as $sortKey => $sortLabel)
+                    <option value="{{ $sortKey }}" @selected($sort === $sortKey)>{{ $sortLabel }}</option>
+                @endforeach
+            </select>
+        </div>
+        <input type="hidden" name="direction" value="{{ $direction }}">
+        <div class="col-md-1 d-grid">
+            <button type="submit" class="btn btn-primary">Go</button>
+        </div>
+        <div class="col-12">
+            <a href="{{ route('books.index') }}" class="btn btn-link px-0">Clear search and filters</a>
+        </div>
+    </form>
 
-        <p class="mt-3 mb-2">
-            <strong>Active filters:</strong>
-            @if ($author !== null || $pages !== null)
-                @if ($author !== null) Author: {{ $author }}@endif
-                @if ($author !== null && $pages !== null) · @endif
-                @if ($pages !== null) {{ $pages }} pages @endif
-            @else
-                None — showing all books
-            @endif
-        </p>
-        <a href="{{ route('books.index') }}" class="btn btn-secondary btn-sm">Clear both filters</a>
-    </section>
+    <p class="text-muted">
+        Showing {{ $books->firstItem() ?? 0 }}–{{ $books->lastItem() ?? 0 }}
+        of {{ $books->total() }} matching books.
+    </p>
 
-    <table class="table table-striped table-bordered">
-        <tr>
-            <th>#</th>
-            <th>ID</th>
-            <th>ISBN</th>
-            <th>Title</th>
-            <th>Author</th>
-            <th>Pages</th>
-            <th>Actions</th>
-        </tr>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">ID</th>
+                    <th scope="col">ISBN</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Author</th>
+                    <th scope="col">Genre</th>
+                    <th scope="col">Pages</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($books as $book)
+                    <tr>
+                        <td>{{ $books->firstItem() + $loop->index }}</td>
+                        <td>{{ $book->id }}</td>
+                        <td><a href="{{ route('books.show', $book) }}">{{ $book->isbn }}</a></td>
+                        <td>{{ $book->title }}</td>
+                        <td>{{ $book->author }}</td>
+                        <td>{{ $book->genre ?? 'Uncategorized' }}</td>
+                        <td>
+                            @if ($book->pages >= 300)
+                                <strong>{{ $book->pages }} (Long Read)</strong>
+                            @else
+                                {{ $book->pages }}
+                            @endif
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{{ route('books.edit', $book) }}" class="btn btn-sm btn-warning">Edit</a>
+                                <form action="{{ route('books.destroy', $book) }}" method="POST"
+                                      onsubmit="return confirm('Delete this record?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="8">No books match this search and these filters.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 
-        @forelse ($books as $book)
-        <tr>
-            <td>{{ $loop->iteration }}</td>
-            <td>{{ $book['id'] }}</td>
-            <td>
-                <a href="{{ route('books.show', $book['id']) }}">
-                    {{ $book['isbn'] }}
-                </a>
-            </td>
-            <td>{{ $book['title'] }}</td>
-            <td>{{ $book['author'] }}</td>
-            <td>
-                @if ($book['pages'] >= 300)
-                    <strong>{{ $book['pages'] }} (Long Read)</strong>
-                @else
-                    {{ $book['pages'] }}
-                @endif
-            </td>
-            <td>
-                <div class="d-flex gap-2">
-                    <a href="{{ route('books.edit', $book['id']) }}" class="btn btn-sm btn-warning">Edit</a>
-                    <form action="{{ route('books.destroy', $book['id']) }}" method="POST" onsubmit="return confirm('Delete this record?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                    </form>
-                </div>
-            </td>
-        </tr>
-        @empty
-        <tr>
-            <td colspan="7">No books match these filters.</td>
-        </tr>
-        @endforelse
-    </table>
-
-    <p class="mt-3 mb-0">Queries: {{ $queryCount }}</p>
+    {{ $books->appends(request()->except('page'))->links('pagination::bootstrap-5') }}
 @endsection

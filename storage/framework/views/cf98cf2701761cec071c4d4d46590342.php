@@ -9,19 +9,6 @@
         <?php echo csrf_field(); ?>
 
         <div class="mb-3">
-            <label for="id" class="form-label">ID</label>
-            <input type="number" id="id" name="id" value="<?php echo e(old('id', $nextId)); ?>" class="form-control" readonly>
-            <?php $__errorArgs = ['id'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> <div class="text-danger"><?php echo e($message); ?></div> <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-        </div>
-
-        <div class="mb-3">
             <label for="isbn" class="form-label">ISBN</label>
             <input type="text" id="isbn" name="isbn" value="<?php echo e(old('isbn')); ?>" class="form-control">
             <?php $__errorArgs = ['isbn'];
@@ -38,6 +25,19 @@ unset($__errorArgs, $__bag); ?>
             <label for="title" class="form-label">Title</label>
             <input type="text" id="title" name="title" value="<?php echo e(old('title')); ?>" class="form-control">
             <?php $__errorArgs = ['title'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <div class="text-danger"><?php echo e($message); ?></div> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+        </div>
+
+        <div class="mb-3">
+            <label for="genre" class="form-label">Genre</label>
+            <input type="text" id="genre" name="genre" value="<?php echo e(old('genre')); ?>" class="form-control">
+            <?php $__errorArgs = ['genre'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }

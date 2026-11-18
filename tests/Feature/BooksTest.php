@@ -2,107 +2,140 @@
 
 namespace Tests\Feature;
 
+use App\Models\Book;
+use Database\Seeders\BookSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class BooksTest extends TestCase
 {
-    private string $originalBooks;
+    use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->originalBooks = file_get_contents(storage_path('books.json'));
+
+        $this->seed(BookSeeder::class);
     }
 
-    protected function tearDown(): void
+    public function test_home_page_explains_the_app_and_links_to_the_book_collection(): void
     {
-        file_put_contents(storage_path('books.json'), $this->originalBooks, LOCK_EX);
-        parent::tearDown();
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('A place to discover your next favorite book')
+            ->assertSee('Explore the collection')
+            ->assertSee('Books in the collection:')
+            ->assertSee('Genres represented by books:')
+            ->assertSee('20')
+            ->assertSee('12')
+            ->assertSee('img/robin-quijano.jpg')
+            ->assertSee('Quijano Library')
+            ->assertSee('>Home</a>', false)
+            ->assertDontSee('My Awesome Site')
+            ->assertSee(route('books.index'));
     }
 
-    public function test_book_pages_still_load_from_json(): void
+    public function test_book_list_displays_the_collection_count(): void
     {
         $this->get(route('books.index'))
             ->assertOk()
-            ->assertSee('Clean Code');
-
-        $this->get(route('books.show', 1))
-            ->assertOk()
-            ->assertSee('Robert C. Martin');
-
-        $this->get(route('books.index', ['author' => 'Robert C. Martin', 'pages' => 464]))
-            ->assertOk()
-            ->assertSee('Clean Code')
-            ->assertDontSee('Refactoring');
+            ->assertSee('Books in collection:')
+            ->assertSee('20')
+            ->assertSee('Noli Me Tangere');
     }
 
-    public function test_invalid_book_is_not_saved_and_valid_book_uses_post_redirect_get(): void
+    public function test_seeder_can_run_again_without_creating_duplicate_books(): void
     {
-        $original = json_decode($this->originalBooks, true);
-        $newId = max(array_map('intval', array_keys($original))) + 1;
+        $this->seed(BookSeeder::class);
 
-        $this->from(route('books.create'))
-            ->post(route('books.store'), [])
-            ->assertRedirect(route('books.create'))
-            ->assertSessionHasErrors(['id', 'isbn', 'title', 'author', 'pages']);
+        $this->assertDatabaseCount('books', 20);
+        $this->assertSame(12, Book::query()->distinct()->count('genre'));
+    }
 
-        $this->assertSame($original, json_decode(file_get_contents(storage_path('books.json')), true));
+    public function test_search_and_filters_can_be_applied_together(): void
+    {
+        $this->get(route('books.index', [
+            'search' => 'Martian',
+            'author' => 'Andy Weir',
+            'pages' => 384,
+        ]))
+            ->assertOk()
+            ->assertSee('The Martian')
+            ->assertDontSee('Dune');
+    }
 
+    public function test_unknown_sort_values_fall_back_to_a_working_order(): void
+    {
+        $this->get(route('books.index', ['sort' => 'not-a-column']))
+            ->assertOk()
+            ->assertSee('Noli Me Tangere')
+            ->assertSee('page=2');
+    }
+
+    public function test_search_pagination_preserves_the_search_term(): void
+    {
+        $this->get(route('books.index', ['search' => 'The']))
+            ->assertOk()
+            ->assertSee('search=The')
+            ->assertSee('page=2');
+    }
+
+    public function test_a_book_can_be_added_and_the_collection_count_increases(): void
+    {
         $this->post(route('books.store'), [
-            'id' => $newId,
             'isbn' => '978-1-23456-789-0',
-            'title' => 'Test Book',
-            'author' => 'Martin Fowler',
+            'title' => 'A Newly Added Book',
+            'genre' => 'Biography',
+            'author' => 'A New Author',
             'pages' => 123,
         ])
             ->assertRedirect(route('books.index'))
             ->assertSessionHas('success', 'Book added successfully.');
 
+        $this->assertDatabaseCount('books', 21);
+        $this->assertDatabaseHas('books', ['title' => 'A Newly Added Book']);
+
         $this->get(route('books.index'))
             ->assertOk()
-            ->assertSee('Test Book')
-            ->assertSessionMissing('success');
+            ->assertSee('Books in collection:')
+            ->assertSee('21');
 
-        $this->get(route('books.show', $newId))
+        $this->get(route('home'))
             ->assertOk()
-            ->assertSee('978-1-23456-789-0');
-
-        $savedBooks = json_decode(file_get_contents(storage_path('books.json')), true);
-        $this->assertCount(count($original) + 1, $savedBooks);
+            ->assertSee('Books in the collection:')
+            ->assertSee('21')
+            ->assertSee('Genres represented by books:')
+            ->assertSee('13');
     }
 
-    public function test_delete_is_forbidden_for_an_authors_last_book_but_allowed_when_author_has_other_books(): void
+    public function test_invalid_book_is_not_saved(): void
     {
-        $original = json_decode($this->originalBooks, true);
-        $singleBookAuthorId = null;
-        $sharedAuthorId = null;
-        $authorCounts = array_count_values(array_column($original, 'author'));
+        $this->from(route('books.create'))
+            ->post(route('books.store'), [])
+            ->assertRedirect(route('books.create'))
+            ->assertSessionHasErrors(['isbn', 'title', 'genre', 'author', 'pages']);
 
-        foreach ($original as $id => $book) {
-            if ($authorCounts[$book['author']] === 1) {
-                $singleBookAuthorId = $id;
-            } elseif ($sharedAuthorId === null) {
-                $sharedAuthorId = $id;
-            }
-        }
+        $this->assertDatabaseCount('books', 20);
+    }
 
-        $this->assertNotNull($singleBookAuthorId);
-        $this->assertNotNull($sharedAuthorId);
+    public function test_book_detail_keeps_the_all_books_navigation_link_current(): void
+    {
+        $book = Book::query()->firstOrFail();
 
-        $this->delete(route('books.destroy', $singleBookAuthorId))
+        $this->get(route('books.show', $book))
+            ->assertOk()
+            ->assertSee($book->title)
+            ->assertSee('aria-current="page"', false)
+            ->assertSee('class="nav-link active" aria-current="page">', false);
+    }
+
+    public function test_deleting_a_last_book_by_an_author_is_forbidden(): void
+    {
+        $book = Book::query()->where('author', 'Andy Weir')->firstOrFail();
+
+        $this->delete(route('books.destroy', $book))
             ->assertForbidden();
 
-        $this->assertArrayHasKey(
-            $singleBookAuthorId,
-            json_decode(file_get_contents(storage_path('books.json')), true)
-        );
-
-        $this->delete(route('books.destroy', $sharedAuthorId))
-            ->assertRedirect(route('books.index'));
-
-        $this->assertArrayNotHasKey(
-            $sharedAuthorId,
-            json_decode(file_get_contents(storage_path('books.json')), true)
-        );
+        $this->assertDatabaseHas('books', ['id' => $book->id]);
     }
 }

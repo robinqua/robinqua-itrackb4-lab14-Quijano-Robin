@@ -8,11 +8,8 @@
 </head>
 <body>
 
-    <header class="bg-dark text-white p-3 mb-4">
-        <div class="container">
-            <h1>My Awesome Site</h1>
-            <?php echo $__env->make('partials._nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-        </div>
+    <header class="mb-4">
+        <?php echo $__env->make('partials._nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     </header>
 
     <main class="container">
@@ -30,5 +27,6 @@
         <p>Robin Quijano</p>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html><?php /**PATH C:\itrackb4-la5-Quijano-Robin-main\resources\views/layouts/app.blade.php ENDPATH**/ ?>
